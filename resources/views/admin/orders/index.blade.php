@@ -59,9 +59,11 @@
                                             <form action="{{ route('admin.orders.update', $order->id) }}" method="POST">
                                                 @csrf
                                                 @method('PUT')
-                                                <input type="checkbox" name="payment_status" value="completed" 
-                                                @if($order->payment_status == 'completed') checked @endif
-                                                onclick="this.form.submit()"> Completed
+                                                <select name="payment_status" class="form-select block w-full mt-1" onchange="this.form.submit()">
+                                                    <option value="pending" @selected($order->payment_status == 'pending')>Pending</option>
+                                                    <option value="completed" @selected($order->payment_status == 'completed')>Completed</option>
+                                                    <option value="failed" @selected($order->payment_status == 'failed')>Failed</option>
+                                                </select>
                                             </form>
                                         </td>
                                         <td class="py-4 px-6 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">

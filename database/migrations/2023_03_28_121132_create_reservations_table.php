@@ -20,6 +20,7 @@ return new class extends Migration
             $table->dateTime('res_date');
             $table->unsignedBigInteger('table_id');
             $table->integer('guest_number');
+             $table->string('status')->default('pending'); // Default status
             $table->timestamps();
         });
     }

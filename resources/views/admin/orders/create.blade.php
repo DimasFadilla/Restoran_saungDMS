@@ -92,7 +92,16 @@
                                 <div class="text-sm text-red-400">{{ $message }}</div>
                             @enderror
                         </div>
-
+                    <!-- Qris Screenshot -->
+                        <div class="sm:col-span-6">
+                            <label for="qris_screenshot" class="block text-sm font-medium text-gray-700">QRIS Screenshot (Optional)</label>
+                            <div class="mt-1">
+                                <input type="file" id="qris_screenshot" name="qris_screenshot" class="block w-full bg-white border border-gray-400 rounded-md py-2 px-3 text-base sm:text-sm" />
+                            </div>
+                            @error('qris_screenshot')
+                                <div class="text-sm text-red-400">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <!-- Submit Button -->
                         <div class="mt-6 p-4">
                             <button type="submit" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-700 rounded-lg text-white">Create Order</button>
@@ -106,20 +115,20 @@
     <script>
         document.getElementById('menu_id').addEventListener('change', function() {
             var selectedMenu = this.options[this.selectedIndex];
-            var price = selectedMenu.dataset.price;
-            var quantity = document.getElementById('quantity').value;
+            var price = parseFloat(selectedMenu.dataset.price);
+            var quantity = parseInt(document.getElementById('quantity').value);
 
             // Update total price
-            document.getElementById('total_price').value = price * quantity;
+            document.getElementById('total_price').value = (price * quantity).toFixed(2);
         });
 
         document.getElementById('quantity').addEventListener('input', function() {
             var selectedMenu = document.getElementById('menu_id');
-            var price = selectedMenu.options[selectedMenu.selectedIndex].dataset.price;
-            var quantity = this.value;
+            var price = parseFloat(selectedMenu.options[selectedMenu.selectedIndex].dataset.price);
+            var quantity = parseInt(this.value);
 
             // Update total price
-            document.getElementById('total_price').value = price * quantity;
+            document.getElementById('total_price').value = (price * quantity).toFixed(2);
         });
     </script>
 </x-admin-layout>

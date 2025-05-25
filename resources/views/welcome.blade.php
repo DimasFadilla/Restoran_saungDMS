@@ -61,6 +61,35 @@
             </div>
         </div>
     </section>
+    <!-- Blog Section -->
+   <section id="blog" class="px-2 py-32 bg-black md:px-0">
+        <div class="container">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl text-green-600">Berita Terkini Kota Semarang</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                @foreach ($artikels as $item)
+                    <div class="col">
+                        <div class="card shadow-lg bg-white rounded-md">
+                            <img src="{{ asset('storage/blogs/' . $item->image) }}" class="card-img-top rounded-t-md" alt="Blog Image">
+                            <div class="card-body p-4">
+                                <p class="mb-3 text-sm text-gray-500">{{ $item->created_at->format('d M Y') }}</p>
+                                <h4 class="font-semibold text-xl mb-3">{{ $item->judul }}</h4>
+                                <p class="text-sm text-gray-600">{{ Str::limit($item->desc, 150) }}</p>
+                                <!-- Correctly link to the blog detail page using the slug -->
+                                <a href="/detail/{{ $item->slug }}" class="text-decoration-none text-danger">Selengkapnya</a>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="text-center mt-8">
+                <a href="{{ route('blog.index') }}" class="btn btn-outline-danger">Lainnya</a>
+            </div>
+        </div>
+    </section>
+    <!-- End Blog Section -->
     <section  class="px-2 py-32 bg-black md:px-0">
         <div class="container items-center max-w-6xl px-4 px-10 mx-auto sm:px-20 md:px-32 lg:px-16">
             <div class="flex flex-wrap items-center -mx-3">

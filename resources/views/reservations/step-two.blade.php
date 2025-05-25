@@ -15,14 +15,14 @@
                             </div>
 
                             <form method="POST" action="{{ route('reservations.store.step-two') }}">
-                                @csrf
-                                
+                                @csrf                                
+                              <!-- Memilih Meja -->
                                 <div class="sm:col-span-6 pt-5">
-                                    <label for="status" class="block text-sm font-medium text-gray-700">Table</label>
+                                    <label for="table_id" class="block text-sm font-medium text-gray-700">Select Table</label>
                                     <div class="mt-1">
                                         <select id="table_id" name="table_id" class="form-multiselect block w-full mt-1">
                                             @foreach ($tables as $table)
-                                                <option value="{{ $table->id }}" @selected($table->id == $reservation->table_id)>{{ $table->name }} ({{ $table->guest_number }} Guests)</option>
+                                                <option value="{{ $table->id }}">{{ $table->name }} ({{ $table->guest_number }} Guests)</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -33,14 +33,14 @@
 
                                 <!-- Checkbox for ordering menu -->
                                 <div class="sm:col-span-6 pt-5">
-                                        <label for="order_menu" class="block text-sm font-medium text-gray-700">Would you like to order menu items?</label>
-                                        <div class="mt-1">
-                                            <input type="checkbox" id="order_menu" name="order_menu" value="1" @checked(old('order_menu')) class="form-checkbox text-indigo-600 h-5 w-5">
-                                        </div>
-                                        @error('order_menu')
-                                            <div class="text-sm text-red-400">{{ $message }}</div>
-                                        @enderror
+                                    <label for="order_menu" class="block text-sm font-medium text-gray-700">Would you like to order menu items?</label>
+                                    <div class="mt-1">
+                                        <input type="checkbox" id="order_menu" name="order_menu" value="1" class="form-checkbox text-indigo-600 h-5 w-5">
                                     </div>
+                                    @error('order_menu')
+                                        <div class="text-sm text-red-400">{{ $message }}</div>
+                                    @enderror
+                                </div>
                                 <div class="mt-6 p-4 flex justify-between">
                                     <a href="{{ route('reservations.step-one') }}" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-700 rounded-lg text-white">Previous</a>
                                     <button type="submit" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-700 rounded-lg text-white">Next</button>

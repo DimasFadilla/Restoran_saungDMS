@@ -10,9 +10,9 @@ use Illuminate\Http\Request;
 class AdminOrderController extends Controller
 {
     // Menampilkan semua pesanan
-    public function index()
+   public function index()
     {
-        $orders = Order::all();  // Ambil semua pesanan dari database
+        $orders = Order::with('menus')->get(); // Mengambil semua pesanan dengan relasi menu
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -27,47 +27,62 @@ class AdminOrderController extends Controller
             'customer_name' => 'required|string|max:255',
             'email' => 'required|email',
             'phone' => 'required|string',
-            'menu_id' => 'required|exists:menus,id',
-            'quantity' => 'required|integer|min:1',
+            'table_id' => 'required|exists:tables,id',
             'total_price' => 'required|numeric',
-            'payment_status' => 'required|string',
+            'payment_status' => 'required|in:pending,completed,failed', // Validasi payment_status
+            'qris_screenshot' => 'nullable|image|max:2048', // Maksimal 2MB, opsional
         ]);
 
+        $data = $request->all();
+
+        // Upload screenshot jika ada
+        if ($request->hasFile('qris_screenshot')) {
+            $file = $request->file('qris_screenshot');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('public/qris_screenshots', $filename);
+            $data['qris_screenshot'] = $filename;
+        }
+
         // Simpan order ke database
-        $order = Order::create([
-            'customer_name' => $request->customer_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'menu_id' => $request->menu_id,
-            'quantity' => $request->quantity,
-            'total_price' => $request->total_price,
-            'payment_status' => $request->payment_status,
-        ]);
+        Order::create($data);
 
         return redirect()->route('admin.orders.index')->with('success', 'Order created successfully!');
     }
 
+   public function update(Request $request, Order $order)
+{
+    $request->validate([
+        'customer_name' => 'required|string|max:255',
+        'email' => 'required|email',
+        'phone' => 'required|string',
+        'table_id' => 'required|exists:tables,id',
+        'total_price' => 'required|numeric',
+        'payment_status' => 'required|in:pending,completed,failed', // Validasi payment_status
+        'qris_screenshot' => 'nullable|image|max:2048', // Maksimal 2MB, opsional
+    ]);
+
+    $data = $request->all();
+
+    // Upload screenshot baru jika ada
+    if ($request->hasFile('qris_screenshot')) {
+        $file = $request->file('qris_screenshot');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $file->storeAs('public/qris_screenshots', $filename);
+        $data['qris_screenshot'] = $filename;
+    }
+
+    // Update order di database
+    $order->update($data);
+
+    return redirect()->route('admin.orders.index')->with('success', 'Order updated successfully.');
+}
+
     // Menampilkan form untuk mengedit pesanan
     public function edit(Order $order)
     {
-        return view('admin.orders.edit', compact('order'));
+        $menus = Menu::all();
+        return view('admin.orders.index', compact('order', 'menus'));
     }
-
-    // Memperbarui pesanan
-    public function update(Request $request, Order $order)
-    {
-        $request->validate([
-            'payment_status' => 'required|string',
-        ]);
-
-        // Update status pembayaran
-        $order->update([
-            'payment_status' => $request->payment_status,
-        ]);
-
-        return redirect()->route('admin.orders.index')->with('success', 'Order updated successfully.');
-    }
-
 
     // Menghapus pesanan
     public function destroy(Order $order)

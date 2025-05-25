@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\ReservationController;
 use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\Admin\KokiController;
+use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Koki\KokiController as KokiKokiController;
 use App\Http\Controllers\Koki\MenuController;    
 use App\Http\Controllers\Koki\CategoryController; 
@@ -13,6 +14,7 @@ use App\Http\Controllers\Frontend\CategoryController as FrontendCategoryControll
 use App\Http\Controllers\Frontend\MenuController as FrontendMenuController;
 use App\Http\Controllers\Frontend\ReservationController as FrontendReservationController;
 use App\Http\Controllers\Frontend\PaymentController as FrontendPaymentController;
+use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
 use App\Http\Controllers\Frontend\WelcomeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +39,7 @@ Route::get('/reservation/step-one', [FrontendReservationController::class, 'step
 Route::post('/reservation/step-one', [FrontendReservationController::class, 'storeStepOne'])->name('reservations.store.step-one');
 
 // Step 2: Memilih Meja & Opsi Memesan Menu
+// Step 2: Memilih Meja & Opsi Memesan Menu
 Route::get('/reservation/step-two', [FrontendReservationController::class, 'stepTwo'])->name('reservations.step-two');
 Route::post('/reservation/step-two', [FrontendReservationController::class, 'storeStepTwo'])->name('reservations.store.step-two');
 
@@ -48,6 +51,10 @@ Route::post('reservations/step-three', [FrontendReservationController::class, 's
 Route::get('reservations/step-four', [FrontendReservationController::class, 'stepFour'])->name('reservations.step-four');
 Route::post('reservations/step-four', [FrontendReservationController::class, 'storeStepFour'])->name('reservations.store.step-four');;
 
+// Display a detailed blog post
+Route::get('/detail/{slug}', [FrontendBlogController::class, 'show'])->name('blog.detail');
+Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index');
+//Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index');
 
 Route::get('/thankyou', [WelcomeController::class, 'thankyou'])->name('thankyou');
 
@@ -79,7 +86,7 @@ Route::middleware(['auth' , 'admin'])->name('admin.')->prefix('admin')->group(fu
     
     //oreder
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
-    Route::resource('/orders', AdminOrderController::class);
+    Route::resource('/admin/orders', AdminOrderController::class);
     Route::get('/orders/{order}/edit', [AdminOrderController::class, 'edit'])->name('orders.edit');
     Route::put('/orders/{order}', [AdminOrderController::class, 'update'])->name('admin.orders.update');  
     Route::delete('/orders/{order}', [AdminOrderController::class, 'destroy'])->name('admin.orders.destroy');  
@@ -94,15 +101,37 @@ Route::middleware(['auth' , 'admin'])->name('admin.')->prefix('admin')->group(fu
     Route::get('/koki/{koki}/edit', [KokiController::class, 'edit'])->name('koki.edit');
     Route::put('/koki/{koki}', [KokiController::class, 'update'])->name('koki.update');
     Route::delete('/koki/{koki}', [KokiController::class, 'destroy'])->name('koki.destroy');
+
+    //blog
+  Route::resource('blog', BlogController::class);
+    Route::get('blogs', [BlogController::class, 'index'])->name('blog');
 });
+
 Route::middleware(['auth:kokis', 'isKoki'])->group(function () {
     
-    Route::get('/dashboard', [KokiKokiController::class, 'dashboard'])->name('koki.dashboard');
+    Route::get('koki/dashboard', [KokiKokiController::class, 'dashboard'])->name('koki.dashboard');
 
-    Route::resource('/menus', MenuController::class);
+    Route::resource('koki/menus', MenuController::class)->names([
+         
+        'create' => 'koki.menus.create',
+        'store' => 'koki.menus.store',
+        'show' => 'koki.menus.show',
+        'edit' => 'koki.menus.edit',
+        'update' => 'koki.menus.update',
+        'destroy' => 'koki.menus.destroy',
+    ]);
+    Route::get('koki/menus', [MenuController::class, 'index'])->name('koki.menus.index');
 
-    Route::resource('/categories' , CategoryController::class);
-    
+    Route::resource('koki/categories' , CategoryController::class)->names([
+         
+        'create' => 'koki.categories.create',
+        'store' => 'koki.categories.store',
+        'show' => 'koki.categories.show',
+        'edit' => 'koki.categories.edit',
+        'update' => 'koki.categories.update',
+        'destroy' => 'koki.categories.destroy',
+    ]);
+    Route::get('koki/categories', [CategoryController::class, 'index'])->name('koki.categories.index');
 
 });
 

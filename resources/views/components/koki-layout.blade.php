@@ -68,8 +68,7 @@
                     <x-koki-nav-link :href="route('koki.menus.index')" :active="request()->routeIs('koki.menus.index')">
                         {{ __('Menus') }}
                     </x-koki-nav-link>
-
-                    <x-koki-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.index')">
+                    <x-koki-nav-link :href="route('koki.categories.index')" :active="request()->routeIs('koki.categories.index')">
                         {{ __('Categories') }}
                     </x-koki-nav-link>
 

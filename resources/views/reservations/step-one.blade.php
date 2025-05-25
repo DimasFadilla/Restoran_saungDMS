@@ -97,7 +97,7 @@
                                     @enderror
                                 </div>
                                 <div class="mt-6 p-4 flex justify-end">
-                                <button type="submit" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-700 rounded-lg text-white">Next</button>
+                                <a href="{{ route('reservations.step-two') }}" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-700 rounded-lg text-white">Next</a>
                                 </div>
                             </form>
                         </div>

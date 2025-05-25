@@ -12,6 +12,9 @@ use Carbon\Carbon;
 use App\Rules\DateBetween;
 use App\Rules\TimeBetween;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ReservationController extends Controller
 {
@@ -39,52 +42,80 @@ public function storeStepOne(Request $request)
     $reservation->fill($validated);
     $request->session()->put('reservation', $reservation);
 
+    Log::info('Reservation data saved to session:', ['reservation' => $reservation->toArray()]);
+
     return to_route('reservations.step-two'); // Pengalihan ke step-two
 }
 
    // Step 2: Memilih Meja & Opsi Memesan Menu
 public function stepTwo(Request $request)
 {
-    $reservation = $request->session()->get('reservation');
-    $res_table_ids = Reservation::orderBy('res_date')->get()->filter(function ($value) use ($reservation) {
-        return $value->res_date->format('Y-m-d') == $reservation->res_date->format('Y-m-d');
-    })->pluck('table_id');
-    
-    $tables = Table::where('status', TableStatus::Avalaiable)
-        ->where('guest_number', '>=', $reservation->guest_number)
-        ->whereNotIn('id', $res_table_ids)->get();
+    Log::info('StepTwo method called');
 
-    // Check if the user wants to order menu
-    if ($request->has('order_menu') && $request->input('order_menu') == 1) {
-        // If the user wants to order menu, proceed to Step 3
-        return to_route('reservations.step-three');
+    $reservation = $request->session()->get('reservation');
+    if (!$reservation) {
+        return redirect()->route('reservations.step-one')->with('error', 'Please complete the reservation form first.');
     }
 
-    // If not ordering menu, go straight to Step 4 (payment)
-    return to_route('reservations.step-four');
-}
+    // Mendapatkan semua ID meja yang sudah dipesan pada tanggal dan waktu yang sama
+    $res_table_ids = Reservation::where('res_date', $reservation->res_date)
+                                ->where('status', '!=', 'cancelled') // Mengasumsikan ada status 'cancelled'
+                                ->pluck('table_id');
 
+    // Mendapatkan daftar meja yang tersedia
+    $tables = Table::where('status', TableStatus::Avalaiable)
+                   ->where('guest_number', '>=', $reservation->guest_number)
+                   ->whereNotIn('id', $res_table_ids)
+                   ->get();
+
+    // Mengambil semua menu yang tersedia
+    $menus = Menu::all();
+
+    return view('reservations.step-two', compact('tables', 'reservation', 'menus'));
+}
 public function storeStepTwo(Request $request)
 {
     $validated = $request->validate([
         'table_id' => ['required'],
-        'menu_items' => ['nullable', 'array'], // Menu items are optional
-        'total_cost' => ['nullable', 'numeric'] // Total cost is optional, depending on menu selection
+        'order_menu' => ['nullable', 'boolean'], // Checkbox untuk memesan menu (opsional)
     ]);
 
     $reservation = $request->session()->get('reservation');
     $reservation->fill($validated);
     $reservation->table_id = $validated['table_id'];
-    $reservation->save();
+    $reservation->status = 'pending'; // Set status default
 
-    // Cek jika menu dipilih
-    if ($request->has('menu_items') && !empty($request->input('menu_items'))) {
-        $request->session()->put('menu_items', $request->input('menu_items')); // Menyimpan menu yang dipilih
-        return to_route('reservations.step-three'); // Lanjut ke step 3 jika menu dipilih
+    // Mendapatkan meja yang dipilih
+    $table = Table::findOrFail($validated['table_id']);
+
+    // Validasi jumlah tamu
+    if ($reservation->guest_number > $table->guest_number) {
+        return back()->with('warning', 'Please choose the table based on the number of guests.');
     }
 
-    // Jika tidak memilih menu, lanjutkan ke step 4
-    return to_route('reservations.step-four'); // Langsung ke step 4 untuk pembayaran
+    // Validasi tanggal reservasi
+    $request_date = Carbon::parse($reservation->res_date);
+    $existing_reservations = Reservation::where('table_id', $validated['table_id'])
+                                        ->where('res_date', $request_date->format('Y-m-d'))
+                                        ->get();
+
+    foreach ($existing_reservations as $existing_reservation) {
+        if ($existing_reservation->res_date->format('Y-m-d') == $request_date->format('Y-m-d')) {
+            return back()->with('warning', 'This table is already reserved for this date.');
+        }
+    }
+
+    // Simpan data reservasi ke database
+    $reservation->save();
+
+    // Cek jika pengguna ingin memesan menu
+    if ($request->has('order_menu') && $request->input('order_menu') == 1) {
+        // Jika pengguna ingin memesan menu, lanjut ke step-three
+        return to_route('reservations.step-three');
+    }
+
+    // Jika pengguna tidak memesan menu, langsung ke step-four
+    return to_route('reservations.step-four');
 }
 
 // Step 3: Memilih Menu
@@ -164,9 +195,5 @@ protected function calculateMenuPrice($menuItems)
     $menus = Menu::whereIn('id', $menuItems)->get();
     return $menus->sum('price');
 }
-
-
-
-
     
 }
